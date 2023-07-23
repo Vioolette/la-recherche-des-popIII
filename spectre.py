@@ -1,6 +1,47 @@
-from automatisation_spectres_perso import spectre
 import numpy as np
 import matplotlib.pyplot as plt
+from astropy.io import fits
+from scipy.ndimage import gaussian_filter
+
+def spectre(nom_image, chemin_dossier):
+    image = fits.open(chemin_dossier + "/" + nom_image)
+
+    filtrage_x = 3.0
+    filtrage_y = 3.0
+    min_val = -1.0e-13
+    max_val = 2.0e-13
+    focus_y_min = 7
+    focus_y_max = 13
+    aspect_graphique = 13
+
+    spectre_2D_data0 = image[1].data
+
+    spectre_2D_data = gaussian_filter(spectre_2D_data0, [filtrage_x, filtrage_y])
+
+    spectres, axes = plt.subplots(2)
+    spectres.suptitle("Spectre 2D et 1D (du haut vers le bas)")
+
+    axes[0].imshow(spectre_2D_data, cmap='viridis', vmin=min_val, vmax=max_val, aspect=aspect_graphique)
+    liste_x = np.round(np.linspace(1.0, 5.0, 7), 2) # liste de 7 nonmbre entre 1 et 5 arrondis 2 chiffres après la virgule
+    nb_x_2D = spectre_2D_data.shape[1]
+    axes[0].set_xticks(np.linspace(0, nb_x_2D, 7))
+    axes[0].set_xticklabels(liste_x)
+
+    axes[0].axhline(y=focus_y_min, color='red')
+    axes[0].axhline(y=focus_y_max, color='red')
+
+    spectre_1D_data = np.sum(spectre_2D_data[focus_y_min:focus_y_max, :], axis=0)
+    if "140" in nom_image:
+        x_1D = np.linspace(0.97, 1.84, spectre_1D_data.shape[0])
+    elif "235" in nom_image:
+        x_1D = np.linspace(1.66, 3.07, spectre_1D_data.shape[0])
+    else:
+        x_1D = np.linspace(2.87, 5.1, spectre_1D_data.shape[0])
+    axes[1].plot(x_1D, spectre_1D_data)
+
+    spectres.savefig("spectres_" + nom_image[:-5] + ".png", format="png")
+    # plt.show()
+    return([x_1D, spectre_1D_data])
 
 
 def spectre_global(nom_image1, chemin1, nom_image2, chemin2, nom_image3, chemin3):
@@ -111,7 +152,7 @@ def spectre_global(nom_image1, chemin1, nom_image2, chemin2, nom_image3, chemin3
     spectre_data = list(spectre_140M[:ref_140M]) + spectre_recouvrement_140M_235M + list(spectre_235M[zone_recouvrement_235M_g1: ref_235M]) + spectre_recouvrement_235M_395M + list(spectre_395M[zone_recouvrement_395M_g:])
     x_spectre = np.linspace(0.97, 5.10, len(spectre_data))
 
-# pour faire apparaître le spectre
+# pour faire apparaître le spectre, décommenter
     plt.plot(x_spectre, spectre_data)
     plt.title("spectre global")
 
