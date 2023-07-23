@@ -116,4 +116,5 @@ def spectre_global(nom_image1, chemin1, nom_image2, chemin2, nom_image3, chemin3
     plt.title("spectre global")
 
     plt.show()
+    plt.savefig("spectre_" + chemin1[(len(chemin1) - 23) :] + ".png", format="png")
     return(x_spectre, spectre_data)
